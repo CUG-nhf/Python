@@ -1,33 +1,57 @@
-import xgboost as xgb
-import pandas as pd
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-# 加载数据集
-file_path = 'training_set.csv'
-df = pd.read_csv(file_path)
+# 定义三个转化函数 f1, f2, f3
+def f1(x, y):
+    return 6 - 2 * x - y
 
-# 选择属性和标签
-X = df.iloc[:, :-1]
-y = df.iloc[:, -1]
+def f2(x, y):
+    return 6 - 2 * y - x
 
-# 将数据集分为训练集和测试集
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def f3(x, y):
+    return 6 - x - y
 
-# 构建 XGBoost 分类器
-model = xgb.XGBClassifier(objective="binary:logistic", eval_metric="logloss", use_label_encoder=False)
+# 生成输入数据 x, y
+x = np.linspace(0, 6, 10, endpoint=True)
+y = np.linspace(0, 6, 10, endpoint=True)
 
-# 训练模型
-model.fit(X_train, y_train)
+# 创建网格点坐标
+X, Y = np.meshgrid(x, y)
 
-# 在测试集上进行预测
-y_pred = model.predict(X_test)
+# 计算 z1, z2, z3
+z1 = f1(X, Y)
+z2 = f2(X, Y)
+z3 = f3(X, Y)
 
-# 评估模型性能
-accuracy = accuracy_score(y_test, y_pred)
-print(f"准确率：{accuracy:.4f}")
+z1[z1 < -1] = np.nan
+z2[z2 < 0] = np.nan
+z3[z3 < 0] = np.nan
 
-# 打印分类报告
-print("分类报告：")
-print(classification_report(y_test, y_pred))
+# 绘制三个平面
+fig = plt.figure(figsize=(10, 6))
+ax = fig.add_subplot(111, projection='3d')
+
+# 绘制 z1
+ax.plot_surface(X, Y, z1, alpha=0.5, rstride=100, cstride=100, color='r', label='2x+y+z=6')
+
+# 绘制 z2
+ax.plot_surface(X, Y, z2, alpha=0.5, facecolors='g', rstride=100, cstride=100, label='x+2y+z=6')
+
+# 绘制 z3
+ax.plot_surface(X, Y, z3, alpha=0.5, facecolors='b', rstride=100, cstride=100, label='x+y+z=6')
+
+ax.scatter([3, 1.475], [0, 1.159], [0, 1.889], color='red')
+
+# 设置坐标轴标签
+ax.set_xlabel('X')
+ax.set_xlim([0, 6])
+ax.set_ylim([0, 6])
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# 添加图例
+ax.legend()
+
+# 显示图形
+plt.show()
