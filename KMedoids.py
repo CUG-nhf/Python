@@ -3,6 +3,7 @@ import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpDot
 import warnings
 import scipy.io
+import time
 
 warnings.filterwarnings('ignore')
 
@@ -14,7 +15,6 @@ def Cvxpy(A, B, C):
 
     prob.solve()
 
-    print("Objective value:", prob.value)
     return prob.status, prob.value, x.value
 
 def PuLP(A, B, C):
@@ -32,14 +32,23 @@ def PuLP(A, B, C):
     # 输出结果
     return prob.status, prob.objective.value(), [i.value() for i in x]
 
+
+def runer(model, data):
+    start_time = time.time()
+    state, obj, c_small = model(data['A'], data['B'], data['C'])
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(state)
+    print(obj)
+    print(c_small)
+    print(f"Execution time: {execution_time} seconds")
+
+
 small = scipy.io.loadmat('instance_small.mat')
 medium = scipy.io.loadmat('instance_medium.mat')
 large = scipy.io.loadmat('instance_large.mat')
 
-state, obj, c_small = Cvxpy(small['A'], small['B'], small['C'])
-state, obj,  c_medium = Cvxpy(medium['A'], medium['B'], medium['C'])
-state, obj,  c_large = Cvxpy(large['A'], large['B'], large['C'])
 
-state, obj,  p_small = PuLP(small['A'], small['B'], small['C'])
-state, obj,  c_medium = Cvxpy(medium['A'], medium['B'], medium['C'])
-state, obj,  c_large = Cvxpy(large['A'], large['B'], large['C'])
+for model in [Cvxpy, PuLP]:
+    for data in [small, medium, large]:
+        runer(model, data)
