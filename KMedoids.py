@@ -13,7 +13,7 @@ def Cvxpy(A, B, C):
     prob = cp.Problem(cp.Maximize(A @ x), 
                     [B @ x <= C, x >= 0])
 
-    prob.solve()
+    prob.solve(solver=cp.SCS)
 
     return prob.status, prob.value, x.value
 
@@ -40,8 +40,8 @@ def runer(model, data):
     execution_time = end_time - start_time
     print(state)
     print(obj)
-    print(c_small)
     print(f"Execution time: {execution_time} seconds")
+    return c_small
 
 
 small = scipy.io.loadmat('instance_small.mat')
@@ -49,6 +49,10 @@ medium = scipy.io.loadmat('instance_medium.mat')
 large = scipy.io.loadmat('instance_large.mat')
 
 
-for model in [Cvxpy, PuLP]:
-    for data in [small, medium, large]:
-        runer(model, data)
+
+for data in [small, medium, large]:
+    ls = []
+    for model in [Cvxpy, PuLP]:
+        x_value = runer(model, data)
+        ls.append(x_value)
+    print(np.array_equal(ls[0], ls[1]))
